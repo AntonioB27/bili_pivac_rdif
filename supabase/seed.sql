@@ -1,0 +1,1 @@
+-- Seed podaci za lokalni razvoj (popunjava se u Task 7)
