@@ -26,9 +26,17 @@ const escapeHtml = (s: string) =>
    .replace(/"/g, "&quot;")
    .replace(/'/g, "&#39;");
 
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
+  }
+
+  // Verificiraj da pozivatelj ima service role key (poziva samo auto_close_sessions)
+  const incoming = req.headers.get("Authorization")?.replace("Bearer ", "");
+  if (!SERVICE_ROLE_KEY || incoming !== SERVICE_ROLE_KEY) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   if (!RESEND_API_KEY || !ADMIN_EMAIL) {
@@ -49,31 +57,35 @@ Deno.serve(async (req: Request) => {
 
   const safeName = escapeHtml(ime_prezime);
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method:  "POST",
-    headers: {
-      "Content-Type":  "application/json",
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from:    FROM_EMAIL,
-      to:      [ADMIN_EMAIL],
-      subject: `Sesija automatski zatvorena — ${safeName}`,
-      html: `
-        <p>Sesija zaposlenika <strong>${safeName}</strong>
-           automatski je zatvorena nakon 12 sati bez odjave.</p>
-        <table>
-          <tr><td><strong>Dolazak:</strong></td><td>${formatTime(clock_in)}</td></tr>
-          <tr><td><strong>Odjava (auto):</strong></td><td>${formatTime(clock_out)}</td></tr>
-        </table>
-        <p>Molimo provjerite sesiju u dashboardu i ispravite po potrebi.</p>
-      `,
-    }),
-  });
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method:  "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from:    FROM_EMAIL,
+        to:      [ADMIN_EMAIL],
+        subject: `Sesija automatski zatvorena — ${safeName}`,
+        html: `
+          <p>Sesija zaposlenika <strong>${safeName}</strong>
+             automatski je zatvorena nakon 12 sati bez odjave.</p>
+          <table>
+            <tr><td><strong>Dolazak:</strong></td><td>${formatTime(clock_in)}</td></tr>
+            <tr><td><strong>Odjava (auto):</strong></td><td>${formatTime(clock_out)}</td></tr>
+          </table>
+          <p>Molimo provjerite sesiju u dashboardu i ispravite po potrebi.</p>
+        `,
+      }),
+    });
 
-  if (!res.ok) {
-    const body = await res.text();
-    return new Response(`Resend error: ${body}`, { status: 502 });
+    if (!res.ok) {
+      const body = await res.text();
+      return new Response(`Resend error: ${body}`, { status: 502 });
+    }
+  } catch (err) {
+    return new Response(`Network error: ${err}`, { status: 503 });
   }
 
   return new Response("OK", { status: 200 });

@@ -2,21 +2,22 @@ BEGIN;
 SELECT plan(5);
 
 -- Pripremi testne korisnike (direktni insert zaobilazi RLS, samo u testovima)
+-- Koristimo email prefikse 'rls-test-' da izbjegnemo konflikt sa seed.sql korisnikom
 INSERT INTO auth.users (id, email, aud, role, encrypted_password,
                         email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
                         created_at, updated_at)
 VALUES
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-   'admin@rfid-bp.local', 'authenticated', 'authenticated', '',
+   'rls-test-admin@rfid-bp.local', 'authenticated', 'authenticated', '',
    now(), '{}', '{}', now(), now()),
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-   'emp@rfid-bp.local', 'authenticated', 'authenticated', '',
+   'rls-test-emp@rfid-bp.local', 'authenticated', 'authenticated', '',
    now(), '{}', '{}', now(), now());
 
 INSERT INTO employees (id, ime_prezime, rfid_uid, username, role)
 VALUES
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Admin Adminić', 'ADMIN-001', 'admin', 'admin'),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Zaposlenik Zaposlenić', 'EMP-001', 'emp', 'employee');
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Admin Adminić', 'RLS-ADMIN-001', 'rls-admin', 'admin'),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Zaposlenik Zaposlenić', 'RLS-EMP-001', 'rls-emp', 'employee');
 
 -- Direktni insert zaobilazi RLS — koristi se samo za testni setup
 INSERT INTO work_sessions (id, employee_id, clock_in, work_date)
@@ -46,8 +47,11 @@ SELECT is(
 );
 
 -- Test 3: Zaposlenik može čitati tablicu employees (za prikaz imena)
+-- Filtriramo po testnim UUID-ovima jer seed.sql dodaje dodatne korisnike
 SELECT is(
-  (SELECT count(*)::integer FROM employees),
+  (SELECT count(*)::integer FROM employees
+   WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')),
   2,
   'Zaposlenik može čitati tablicu employees'
 );
