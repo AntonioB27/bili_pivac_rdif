@@ -37,7 +37,17 @@ Zahtijeva interaktivnu autentikaciju (browser ili token).
 
 ---
 
-## Korak 3 — Pushaj migracije na produkciju
+## Korak 3 — Omogući pg_cron i pg_net ekstenzije
+
+U Supabase dashboardu:
+**Database → Extensions** → pretraži `pg_cron` → **Enable**.
+Ponovi za `pg_net`.
+
+> **Važno:** Ovaj korak mora biti napravljen PRIJE `db push`. Migracija `20260425161232_auto_close_cron.sql` poziva `CREATE EXTENSION pg_cron` — na Supabase managed instancama ekstenzija mora biti odobrena u dashboardu prije nego migracija može uspješno završiti.
+
+---
+
+## Korak 4 — Pushaj migracije na produkciju
 
 ```bash
 sg docker -c "npx supabase db push"
@@ -50,15 +60,7 @@ Ovo primjenjuje svih 5 migracija na produkcijsku bazu:
 4. `20260425073135_prevent_duplicate_open_sessions.sql`
 5. `20260425161232_auto_close_cron.sql`
 
----
-
-## Korak 4 — Omogući pg_cron i pg_net ekstenzije
-
-U Supabase dashboardu:
-**Database → Extensions** → pretraži `pg_cron` → **Enable**.
-Ponovi za `pg_net`.
-
-> Napomena: Migracija ih kreira putem `CREATE EXTENSION IF NOT EXISTS`, ali Dashboard ih mora eksplicitno odobriti na managed instancama.
+> **Napomena:** Migracije se ne mogu automatski poništiti. U slučaju greške, kontaktiraj Supabase podršku za point-in-time recovery (dostupno na Pro planu).
 
 ---
 
@@ -74,6 +76,8 @@ ALTER DATABASE postgres
 ```
 
 Zamijeni `<project-ref>` i `<service-role-key>` s vrijednostima iz Koraka 1.
+
+> **Sigurnost:** Ova postavka je vidljiva Postgres superkorisnicima putem `SELECT current_setting('app.service_role_key')`. Nemoj je smatrati zamjenom za Vault — koristi je samo za pg_net HTTP pozive unutar baze.
 
 ---
 
@@ -148,10 +152,11 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 
 - [ ] Projekt kreiran na dashboardu
 - [ ] `supabase link` izvršen
+- [ ] pg_cron i pg_net ekstenzije omogućene u dashboardu
 - [ ] `supabase db push` — 5 migracija primijenjeno
-- [ ] pg_cron i pg_net ekstenzije omogućene
 - [ ] Database settings konfigurirani
 - [ ] Edge Function secrets postavljeni
 - [ ] `send_email` funkcija deployana
 - [ ] Admin korisnik kreiran
-- [ ] Cron job verificiran (`SELECT * FROM cron.job`)
+- [ ] Cron job verificiran (`SELECT jobname, schedule, command FROM cron.job`)
+- [ ] Produkcijski ključevi pohranjeni u password manageru
