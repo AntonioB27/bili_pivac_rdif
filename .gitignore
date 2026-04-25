@@ -1,0 +1,4 @@
+.worktrees/
+supabase/.env.local
+.env
+.env.local
