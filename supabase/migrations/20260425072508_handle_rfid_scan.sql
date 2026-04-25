@@ -5,6 +5,7 @@ CREATE OR REPLACE FUNCTION handle_rfid_scan(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_employee  employees%ROWTYPE;
@@ -23,7 +24,8 @@ BEGIN
   FROM work_sessions
   WHERE employee_id = v_employee.id AND clock_out IS NULL
   ORDER BY clock_in DESC
-  LIMIT 1;
+  LIMIT 1
+  FOR UPDATE;
 
   IF NOT FOUND THEN
     -- CLOCK IN

@@ -35,7 +35,7 @@ SELECT is(
   'Sesija postoji u work_sessions nakon clock_in'
 );
 
--- Test 4: clock_in odgovor sadrži ime zaposlenika
+-- Test 4: Sesija je otvorena (clock_out IS NULL) nakon clock_in
 SELECT is(
   (SELECT clock_out FROM work_sessions
    WHERE employee_id = '11111111-1111-1111-1111-111111111111'),
