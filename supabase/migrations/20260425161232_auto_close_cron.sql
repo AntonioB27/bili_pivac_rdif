@@ -52,6 +52,9 @@ BEGIN
 END;
 $$;
 
+-- Samo postgres (pg_cron) treba pokretati ovu funkciju — blokiraj direktne pozive
+REVOKE EXECUTE ON FUNCTION auto_close_sessions() FROM PUBLIC;
+
 -- Pokreni svakih 5 minuta
 SELECT cron.schedule(
   'auto-close-sessions',
