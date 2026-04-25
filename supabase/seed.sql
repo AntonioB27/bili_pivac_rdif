@@ -30,7 +30,7 @@ INSERT INTO auth.identities (
   last_sign_in_at, created_at, updated_at
 )
 VALUES (
-  '00000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000002',
   '00000000-0000-0000-0000-000000000001',
   '00000000-0000-0000-0000-000000000001',
   'email',
@@ -39,7 +39,7 @@ VALUES (
   now(),
   now()
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (provider, provider_id) DO NOTHING;
 
 INSERT INTO employees (id, ime_prezime, rfid_uid, username, role)
 VALUES (
