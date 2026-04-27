@@ -8,7 +8,7 @@ SELECT has_column('public', 'employees', 'ime_prezime', 'employees.ime_prezime')
 SELECT has_column('public', 'employees', 'rfid_uid',    'employees.rfid_uid');
 SELECT has_column('public', 'employees', 'username',    'employees.username');
 SELECT has_column('public', 'employees', 'role',        'employees.role');
-SELECT col_not_null('public', 'employees', 'rfid_uid',    'rfid_uid NOT NULL');
+SELECT col_is_null('public', 'employees', 'rfid_uid',     'rfid_uid nullable for admins');
 SELECT col_not_null('public', 'employees', 'ime_prezime', 'ime_prezime NOT NULL');
 
 -- work_sessions
