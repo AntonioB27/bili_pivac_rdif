@@ -10,11 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as IzvjestajiRouteImport } from './routes/izvjestaji'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ZaposleniciIndexRouteImport } from './routes/zaposlenici/index'
+import { Route as SesijeIndexRouteImport } from './routes/sesije/index'
+import { Route as ZaposleniciNoviRouteImport } from './routes/zaposlenici/novi'
+import { Route as ZaposleniciZaposlenikIdRouteImport } from './routes/zaposlenici/$zaposlenikId'
+import { Route as SesijeSessionIdRouteImport } from './routes/sesije/$sessionId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IzvjestajiRoute = IzvjestajiRouteImport.update({
+  id: '/izvjestaji',
+  path: '/izvjestaji',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,31 +39,112 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZaposleniciIndexRoute = ZaposleniciIndexRouteImport.update({
+  id: '/zaposlenici/',
+  path: '/zaposlenici/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SesijeIndexRoute = SesijeIndexRouteImport.update({
+  id: '/sesije/',
+  path: '/sesije/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZaposleniciNoviRoute = ZaposleniciNoviRouteImport.update({
+  id: '/zaposlenici/novi',
+  path: '/zaposlenici/novi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZaposleniciZaposlenikIdRoute = ZaposleniciZaposlenikIdRouteImport.update({
+  id: '/zaposlenici/$zaposlenikId',
+  path: '/zaposlenici/$zaposlenikId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SesijeSessionIdRoute = SesijeSessionIdRouteImport.update({
+  id: '/sesije/$sessionId',
+  path: '/sesije/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
+  '/sesije/$sessionId': typeof SesijeSessionIdRoute
+  '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
+  '/zaposlenici/novi': typeof ZaposleniciNoviRoute
+  '/sesije/': typeof SesijeIndexRoute
+  '/zaposlenici/': typeof ZaposleniciIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
+  '/sesije/$sessionId': typeof SesijeSessionIdRoute
+  '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
+  '/zaposlenici/novi': typeof ZaposleniciNoviRoute
+  '/sesije': typeof SesijeIndexRoute
+  '/zaposlenici': typeof ZaposleniciIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
+  '/sesije/$sessionId': typeof SesijeSessionIdRoute
+  '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
+  '/zaposlenici/novi': typeof ZaposleniciNoviRoute
+  '/sesije/': typeof SesijeIndexRoute
+  '/zaposlenici/': typeof ZaposleniciIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/izvjestaji'
+    | '/login'
+    | '/sesije/$sessionId'
+    | '/zaposlenici/$zaposlenikId'
+    | '/zaposlenici/novi'
+    | '/sesije/'
+    | '/zaposlenici/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/' | '/login'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/izvjestaji'
+    | '/login'
+    | '/sesije/$sessionId'
+    | '/zaposlenici/$zaposlenikId'
+    | '/zaposlenici/novi'
+    | '/sesije'
+    | '/zaposlenici'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/izvjestaji'
+    | '/login'
+    | '/sesije/$sessionId'
+    | '/zaposlenici/$zaposlenikId'
+    | '/zaposlenici/novi'
+    | '/sesije/'
+    | '/zaposlenici/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
+  IzvjestajiRoute: typeof IzvjestajiRoute
   LoginRoute: typeof LoginRoute
+  SesijeSessionIdRoute: typeof SesijeSessionIdRoute
+  ZaposleniciZaposlenikIdRoute: typeof ZaposleniciZaposlenikIdRoute
+  ZaposleniciNoviRoute: typeof ZaposleniciNoviRoute
+  SesijeIndexRoute: typeof SesijeIndexRoute
+  ZaposleniciIndexRoute: typeof ZaposleniciIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +156,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/izvjestaji': {
+      id: '/izvjestaji'
+      path: '/izvjestaji'
+      fullPath: '/izvjestaji'
+      preLoaderRoute: typeof IzvjestajiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,12 +177,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/zaposlenici/': {
+      id: '/zaposlenici/'
+      path: '/zaposlenici'
+      fullPath: '/zaposlenici/'
+      preLoaderRoute: typeof ZaposleniciIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sesije/': {
+      id: '/sesije/'
+      path: '/sesije'
+      fullPath: '/sesije/'
+      preLoaderRoute: typeof SesijeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zaposlenici/novi': {
+      id: '/zaposlenici/novi'
+      path: '/zaposlenici/novi'
+      fullPath: '/zaposlenici/novi'
+      preLoaderRoute: typeof ZaposleniciNoviRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zaposlenici/$zaposlenikId': {
+      id: '/zaposlenici/$zaposlenikId'
+      path: '/zaposlenici/$zaposlenikId'
+      fullPath: '/zaposlenici/$zaposlenikId'
+      preLoaderRoute: typeof ZaposleniciZaposlenikIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sesije/$sessionId': {
+      id: '/sesije/$sessionId'
+      path: '/sesije/$sessionId'
+      fullPath: '/sesije/$sessionId'
+      preLoaderRoute: typeof SesijeSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRoute,
+  IzvjestajiRoute: IzvjestajiRoute,
   LoginRoute: LoginRoute,
+  SesijeSessionIdRoute: SesijeSessionIdRoute,
+  ZaposleniciZaposlenikIdRoute: ZaposleniciZaposlenikIdRoute,
+  ZaposleniciNoviRoute: ZaposleniciNoviRoute,
+  SesijeIndexRoute: SesijeIndexRoute,
+  ZaposleniciIndexRoute: ZaposleniciIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
