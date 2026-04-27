@@ -30,7 +30,8 @@ function LoginPage() {
       setLoading(false)
       return
     }
-    navigate({ to: '/dashboard' })
+    setLoading(false)
+    await navigate({ to: '/dashboard' })
   }
 
   return (

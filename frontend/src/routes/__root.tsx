@@ -6,11 +6,11 @@ type RouterContext = { queryClient: QueryClient }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session && location.pathname !== '/login') {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user && location.pathname !== '/login') {
       throw redirect({ to: '/login' })
     }
-    if (session && location.pathname === '/login') {
+    if (user && location.pathname === '/login') {
       throw redirect({ to: '/dashboard' })
     }
   },
@@ -23,7 +23,7 @@ function RootLayout() {
 
   async function handleSignOut() {
     await supabase.auth.signOut()
-    navigate({ to: '/login' })
+    await navigate({ to: '/login' })
   }
 
   if (pathname === '/login') return <Outlet />
