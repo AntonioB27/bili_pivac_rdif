@@ -76,10 +76,11 @@ Deno.serve(async (req) => {
 
   if (payload.action === 'delete') {
     // Force-close any open sessions before deleting
-    await adminClient.from('work_sessions')
-      .update({ clock_out: new Date().toISOString(), duration_min: 0, is_auto_closed: true })
+    const { error: closeError } = await adminClient.from('work_sessions')
+      .update({ clock_out: new Date().toISOString(), duration_min: null, is_auto_closed: true })
       .eq('employee_id', payload.id)
       .is('clock_out', null)
+    if (closeError) return json({ error: closeError.message }, 500)
 
     const { error } = await adminClient.auth.admin.deleteUser(payload.id)
     if (error) return json({ error: error.message }, 400)
