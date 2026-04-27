@@ -70,6 +70,7 @@ export function useSessions(month: string, employeeId?: string) {
 export function useSession(id: string) {
   return useQuery({
     queryKey: ['sessions', id],
+    enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('work_sessions')

@@ -24,6 +24,7 @@ export function useEmployees() {
 export function useEmployee(id: string) {
   return useQuery({
     queryKey: ['employees', id],
+    enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase.from('employees').select('*').eq('id', id).single()
       if (error) throw error
@@ -34,6 +35,7 @@ export function useEmployee(id: string) {
 
 async function callManageEmployee(payload: unknown): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Not authenticated')
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage_employee`,
     {

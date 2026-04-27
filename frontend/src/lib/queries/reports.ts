@@ -25,7 +25,7 @@ export function useMonthlyReport(month: string) {
 
       for (const s of data as any[]) {
         byDay[s.work_date] = (byDay[s.work_date] ?? 0) + (s.duration_min ?? 0)
-        if (!byEmp[s.employee_id]) byEmp[s.employee_id] = { ime_prezime: s.employees.ime_prezime, total_minutes: 0 }
+        if (!byEmp[s.employee_id]) byEmp[s.employee_id] = { ime_prezime: s.employees?.ime_prezime ?? 'Unknown', total_minutes: 0 }
         byEmp[s.employee_id].total_minutes += s.duration_min ?? 0
       }
 
