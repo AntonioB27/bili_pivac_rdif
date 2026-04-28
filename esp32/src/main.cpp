@@ -3,20 +3,29 @@
 #include "led.h"
 #include "storage.h"
 #include "wifi_mgr.h"
+#include "rfid.h"
 
 static Config gCfg;
 
 void setup() {
     Serial.begin(115200);
     ledInit();
-    ledSet(255, 255, 255);  // white = booting / connecting
+    ledSet(255, 255, 255);
 
     if (!storageInit()) {
         while (true) { ledBlink(255, 0, 0, 1, 300, 700); }
     }
 
-    configLoad(gCfg);  // empty on first boot — portal will populate it
-    wifiInit(gCfg);    // blocks until connected; purple pulse if portal opens
+    configLoad(gCfg);
+    wifiInit(gCfg);
+    rfidInit();
+    ledOff();
 }
 
-void loop() {}
+void loop() {
+    char uid[32];
+    if (rfidRead(uid, sizeof(uid))) {
+        Serial.printf("Card: %s\n", uid);
+    }
+    delay(50);
+}
