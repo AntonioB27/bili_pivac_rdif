@@ -56,6 +56,7 @@ function EditSesijaPage() {
   }
 
   if (isLoading) return <Skeleton className="h-64 w-full max-w-md" />
+  if (!session) return <p className="text-gray-500">Sesija nije pronađena.</p>
 
   return (
     <div className="max-w-md">

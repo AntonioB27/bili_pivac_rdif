@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useActiveSessions, useAutoClosedAlerts } from '../lib/queries/sessions'
+import { useActiveSessions, useAutoClosedAlerts, useSessions } from '../lib/queries/sessions'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Alert, AlertDescription } from '../components/ui/alert'
 import { Skeleton } from '../components/ui/skeleton'
-import { formatDateTime } from '../lib/utils'
+import { formatDateTime, toMonthString } from '../lib/utils'
 
 export const Route = createFileRoute('/dashboard')({
   component: DashboardPage,
@@ -12,9 +12,10 @@ export const Route = createFileRoute('/dashboard')({
 function DashboardPage() {
   const { data: activeSessions, isLoading: loadingActive } = useActiveSessions()
   const { data: alerts, isLoading: loadingAlerts } = useAutoClosedAlerts()
-
-  const today = new Date().toISOString().split('T')[0]
-  const todayCount = activeSessions?.filter(s => s.work_date === today).length ?? 0
+  const today = new Date()
+  const todayStr = `${toMonthString(today)}-${String(today.getDate()).padStart(2, '0')}`
+  const { data: todaySessions } = useSessions(toMonthString(today))
+  const todayCount = todaySessions?.filter(s => s.work_date === todayStr).length ?? 0
 
   return (
     <div className="space-y-6">
@@ -55,7 +56,7 @@ function DashboardPage() {
         <Alert className="border-orange-200 bg-orange-50">
           <AlertDescription>
             <p className="font-medium text-orange-800 mb-2">
-              {alerts!.length} {alerts!.length === 1 ? 'sesija automatski zatvorena' : 'sesija automatski zatvoreno'} — potrebna provjera
+              {alerts!.length} {alerts!.length === 1 ? 'sesija automatski zatvorena' : 'sesija automatski zatvorene'} — potrebna provjera
             </p>
             <div className="space-y-1">
               {alerts!.map(s => (

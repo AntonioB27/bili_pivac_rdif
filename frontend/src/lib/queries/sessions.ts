@@ -42,6 +42,7 @@ export function useAutoClosedAlerts() {
       if (error) throw error
       return data as WorkSession[]
     },
+    refetchInterval: 30_000,
   })
 }
 

@@ -41,6 +41,7 @@ function EditZaposlenikPage() {
   }
 
   if (isLoading) return <Skeleton className="h-64 w-full max-w-md" />
+  if (!emp) return <p className="text-gray-500">Zaposlenik nije pronađen.</p>
 
   return (
     <div className="max-w-md">

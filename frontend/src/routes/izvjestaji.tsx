@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import * as XLSX from 'xlsx'
 import { useMonthlyReport } from '../lib/queries/reports'
@@ -18,6 +19,7 @@ const MONTHS = getLast12Months()
 
 function IzvjestajiPage() {
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[0])
+  const [exportingYear, setExportingYear] = useState(false)
   const { data, isLoading } = useMonthlyReport(selectedMonth)
 
   const dailyData = data?.daily.map(d => ({
@@ -45,30 +47,37 @@ function IzvjestajiPage() {
     XLSX.writeFile(wb, `evidencija-${selectedMonth}.xlsx`)
   }
 
-  async function exportYear() {
-    const wb = XLSX.utils.book_new()
-    for (const month of [...MONTHS].reverse()) {
-      const [year, m] = month.split('-')
-      const start = `${month}-01`
-      const end = `${month}-${String(new Date(+year, +m, 0).getDate()).padStart(2, '0')}`
-      const { data: sessions } = await supabase
-        .from('work_sessions')
-        .select('work_date, clock_in, clock_out, duration_min, employees(ime_prezime)')
-        .gte('work_date', start)
-        .lte('work_date', end)
-        .not('clock_out', 'is', null)
-
-      const rows = (sessions ?? []).map((s: any) => ({
-        Datum: formatDate(s.work_date),
-        Zaposlenik: s.employees?.ime_prezime ?? '',
-        Dolazak: formatDateTime(s.clock_in),
-        Odlazak: s.clock_out ? formatDateTime(s.clock_out) : '',
-        'Trajanje (min)': s.duration_min ?? '',
-      }))
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), formatMonthLabel(month))
+  const exportYear = useCallback(async () => {
+    setExportingYear(true)
+    try {
+      const wb = XLSX.utils.book_new()
+      for (const month of [...MONTHS].reverse()) {
+        const [year, m] = month.split('-')
+        const start = `${month}-01`
+        const end = `${month}-${String(new Date(+year, +m, 0).getDate()).padStart(2, '0')}`
+        const { data: sessions, error } = await supabase
+          .from('work_sessions')
+          .select('work_date, clock_in, clock_out, duration_min, employees(ime_prezime)')
+          .gte('work_date', start)
+          .lte('work_date', end)
+          .not('clock_out', 'is', null)
+        if (error) throw error
+        const rows = (sessions ?? []).map((s: any) => ({
+          Datum: formatDate(s.work_date),
+          Zaposlenik: s.employees?.ime_prezime ?? '',
+          Dolazak: formatDateTime(s.clock_in),
+          Odlazak: s.clock_out ? formatDateTime(s.clock_out) : '',
+          'Trajanje (min)': s.duration_min ?? '',
+        }))
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), formatMonthLabel(month))
+      }
+      XLSX.writeFile(wb, `evidencija-${new Date().getFullYear()}.xlsx`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Greška pri izvozu')
+    } finally {
+      setExportingYear(false)
     }
-    XLSX.writeFile(wb, `evidencija-${new Date().getFullYear()}.xlsx`)
-  }
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -82,7 +91,7 @@ function IzvjestajiPage() {
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={exportMonth} disabled={!data || isLoading}>Izvezi mjesec</Button>
-          <Button variant="outline" onClick={exportYear}>Izvezi godinu</Button>
+          <Button variant="outline" onClick={exportYear} disabled={exportingYear}>{exportingYear ? 'Izvoz...' : 'Izvezi godinu'}</Button>
         </div>
       </div>
 
