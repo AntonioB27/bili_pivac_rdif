@@ -16,6 +16,7 @@ static bool _load(JsonDocument& doc) {
 
 static void _save(JsonDocument& doc) {
     File f = LittleFS.open(PATH, "w");
+    if (!f) return;
     serializeJson(doc, f);
     f.close();
 }

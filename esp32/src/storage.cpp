@@ -23,6 +23,7 @@ void configSave(const Config& cfg) {
     doc["supabase_url"]      = cfg.supabase_url;
     doc["supabase_anon_key"] = cfg.supabase_anon_key;
     File f = LittleFS.open("/config.json", "w");
+    if (!f) return;
     serializeJson(doc, f);
     f.close();
 }

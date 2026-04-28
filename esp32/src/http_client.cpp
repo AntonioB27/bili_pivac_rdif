@@ -8,6 +8,7 @@ ScanResult httpSendScan(const char* supabaseUrl, const char* anonKey,
     HTTPClient http;
     String url = String(supabaseUrl) + "/rest/v1/rpc/handle_rfid_scan";
     http.begin(url);
+    http.setInsecure();  // skip cert verification — acceptable for internal IoT device
     http.addHeader("Content-Type", "application/json");
     http.addHeader("apikey", anonKey);
     http.addHeader("Authorization", String("Bearer ") + anonKey);

@@ -20,8 +20,9 @@ static void ntpSync() {
 static void getTimestamp(char* buf, size_t len) {
     time_t now;
     time(&now);
-    struct tm* t = gmtime(&now);
-    strftime(buf, len, "%Y-%m-%dT%H:%M:%SZ", t);
+    struct tm t;
+    gmtime_r(&now, &t);
+    strftime(buf, len, "%Y-%m-%dT%H:%M:%SZ", &t);
 }
 
 static void applyLedFeedback(ScanResult result) {
