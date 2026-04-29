@@ -44,6 +44,7 @@ void setup() {
         while (true) { ledBlink(255, 0, 0, 1, 300, 700); }
     }
 
+    queueInit();
     configLoad(gCfg);  // empty on first boot — portal will populate it
     wifiInit(gCfg);    // blocks until connected; purple pulse if portal opens
     ntpSync();
@@ -56,11 +57,15 @@ void loop() {
     if (wifiConnected() && !queueIsEmpty()) {
         QueueEntry entry;
         if (queuePeek(entry)) {
-            ledSet(255, 255, 255);  // white = syncing
+            Serial.printf("[QUEUE] Replaying UID: %s  Time: %s\n", entry.uid, entry.scanned_at);
+            ledSet(255, 255, 255);
             ScanResult result = httpSendScan(gCfg.supabase_url, gCfg.supabase_anon_key,
                                              entry.uid, entry.scanned_at);
             if (result != ScanResult::Error) {
-                queueDequeue();  // remove on success or legitimate rejection
+                Serial.println("[QUEUE] Dequeued");
+                queueDequeue();
+            } else {
+                Serial.println("[QUEUE] Retry next loop");
             }
             ledOff();
         }
@@ -71,16 +76,26 @@ void loop() {
     if (rfidRead(uid, sizeof(uid))) {
         char ts[32];
         getTimestamp(ts, sizeof(ts));
+        Serial.printf("[SCAN] UID: %s  Time: %s\n", uid, ts);
 
         if (wifiConnected()) {
+            Serial.println("[HTTP] Sending scan...");
             ScanResult result = httpSendScan(gCfg.supabase_url, gCfg.supabase_anon_key, uid, ts);
-            if (result == ScanResult::Error) {
-                queueEnqueue(uid, ts);
+            switch (result) {
+                case ScanResult::ClockIn:  Serial.println("[HTTP] clock_in");  break;
+                case ScanResult::ClockOut: Serial.println("[HTTP] clock_out"); break;
+                case ScanResult::TooSoon:  Serial.println("[HTTP] too_soon");  break;
+                case ScanResult::NotFound: Serial.println("[HTTP] not_found"); break;
+                case ScanResult::Error:
+                    Serial.println("[HTTP] error — queuing");
+                    queueEnqueue(uid, ts);
+                    break;
             }
             applyLedFeedback(result);
         } else {
+            Serial.println("[WIFI] Offline — scan queued");
             queueEnqueue(uid, ts);
-            ledBlink(255, 0, 0, 5, 100, 100);  // fast red = queued offline
+            ledBlink(255, 0, 0, 5, 100, 100);
         }
     }
 

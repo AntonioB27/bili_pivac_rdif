@@ -21,6 +21,14 @@ static void _save(JsonDocument& doc) {
     f.close();
 }
 
+void queueInit() {
+    if (!LittleFS.exists(PATH)) {
+        File f = LittleFS.open(PATH, "w");
+        if (f) { f.print("[]"); f.close(); }
+        else   { Serial.println("[QUEUE] ERROR: could not create queue.json"); }
+    }
+}
+
 bool queueIsEmpty() {
     JsonDocument doc;
     _load(doc);

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
+import { Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import * as XLSX from 'xlsx'
 import { useMonthlyReport } from '../lib/queries/reports'
@@ -16,6 +17,24 @@ export const Route = createFileRoute('/izvjestaji')({
 })
 
 const MONTHS = getLast12Months()
+
+const CHART_STYLE = {
+  cartesianGrid: 'oklch(0.25 0.040 152)',
+  axis: 'oklch(0.58 0.055 152)',
+  tooltip: { bg: 'oklch(0.17 0.030 152)', border: 'oklch(0.25 0.040 152)', text: 'oklch(0.93 0.016 152)' },
+  bar1: 'oklch(0.72 0.190 143)',
+  bar2: 'oklch(0.60 0.170 143)',
+}
+
+function CustomTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
+      <p className="text-muted-foreground text-xs mb-1">{label}</p>
+      <p className="font-semibold text-foreground">{payload[0].value}h</p>
+    </div>
+  )
+}
 
 function IzvjestajiPage() {
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[0])
@@ -80,9 +99,12 @@ function IzvjestajiPage() {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-bold">Izvještaji</h1>
+    <div className="space-y-8">
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="font-heading font-bold text-3xl text-foreground">Izvještaji</h1>
+          <p className="text-muted-foreground text-sm mt-1">Analitika i izvoz podataka</p>
+        </div>
         <div className="flex gap-2 flex-wrap items-center">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
@@ -90,8 +112,14 @@ function IzvjestajiPage() {
               {MONTHS.map(m => <SelectItem key={m} value={m}>{formatMonthLabel(m)}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={exportMonth} disabled={!data || isLoading}>Izvezi mjesec</Button>
-          <Button variant="outline" onClick={exportYear} disabled={exportingYear}>{exportingYear ? 'Izvoz...' : 'Izvezi godinu'}</Button>
+          <Button variant="outline" size="sm" onClick={exportMonth} disabled={!data || isLoading} className="gap-2">
+            <Download size={14} />
+            Izvezi mjesec
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportYear} disabled={exportingYear} className="gap-2">
+            <Download size={14} />
+            {exportingYear ? 'Izvoz...' : 'Izvezi godinu'}
+          </Button>
         </div>
       </div>
 
@@ -103,20 +131,24 @@ function IzvjestajiPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Sati po danu — {formatMonthLabel(selectedMonth)}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                Sati po danu — {formatMonthLabel(selectedMonth)}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {dailyData.length === 0 ? (
-                <p className="text-gray-500 text-sm">Nema podataka za ovaj mjesec.</p>
+                <div className="flex items-center justify-center h-52 text-muted-foreground text-sm">
+                  Nema podataka za ovaj mjesec.
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="dan" tick={{ fontSize: 12 }} />
-                    <YAxis unit="h" tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(v) => [`${v ?? 0}h`, 'Ukupno']} />
-                    <Bar dataKey="sati" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                  <BarChart data={dailyData} barSize={14}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_STYLE.cartesianGrid} />
+                    <XAxis dataKey="dan" tick={{ fontSize: 11, fill: CHART_STYLE.axis }} axisLine={false} tickLine={false} />
+                    <YAxis unit="h" tick={{ fontSize: 11, fill: CHART_STYLE.axis }} axisLine={false} tickLine={false} width={36} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'oklch(0.72 0.190 143 / 0.08)' }} />
+                    <Bar dataKey="sati" fill={CHART_STYLE.bar1} radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -124,20 +156,24 @@ function IzvjestajiPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Sati po zaposleniku — {formatMonthLabel(selectedMonth)}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                Sati po zaposleniku — {formatMonthLabel(selectedMonth)}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {empData.length === 0 ? (
-                <p className="text-gray-500 text-sm">Nema podataka za ovaj mjesec.</p>
+                <div className="flex items-center justify-center h-52 text-muted-foreground text-sm">
+                  Nema podataka za ovaj mjesec.
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={empData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="ime" tick={{ fontSize: 12 }} />
-                    <YAxis unit="h" tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(v) => [`${v ?? 0}h`, 'Ukupno']} />
-                    <Bar dataKey="sati" fill="#10b981" radius={[3, 3, 0, 0]} />
+                  <BarChart data={empData} barSize={24}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_STYLE.cartesianGrid} />
+                    <XAxis dataKey="ime" tick={{ fontSize: 11, fill: CHART_STYLE.axis }} axisLine={false} tickLine={false} />
+                    <YAxis unit="h" tick={{ fontSize: 11, fill: CHART_STYLE.axis }} axisLine={false} tickLine={false} width={36} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'oklch(0.72 0.190 143 / 0.08)' }} />
+                    <Bar dataKey="sati" fill={CHART_STYLE.bar2} radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
