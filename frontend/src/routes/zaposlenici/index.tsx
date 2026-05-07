@@ -24,6 +24,17 @@ function ZaposlednikListPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const toDelete = employees?.find(e => e.id === deleteId)
 
+  const [search, setSearch] = useState('')
+
+  const filtered = employees?.filter(e => {
+    const q = search.toLowerCase()
+    return (
+      e.ime_prezime.toLowerCase().includes(q) ||
+      e.username.toLowerCase().includes(q) ||
+      (e.rfid_uid ?? '').toLowerCase().includes(q)
+    )
+  }) ?? []
+
   async function handleDelete() {
     if (!deleteId) return
     try {
@@ -37,7 +48,7 @@ function ZaposlednikListPage() {
 
   return (
     <>
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="font-heading font-bold text-3xl text-foreground tracking-wide uppercase">Zaposlenici</h1>
           <p className="font-mono text-xs text-muted-foreground tracking-wider mt-1">Upravljanje zaposlenicima i RFID karticama</p>
@@ -50,14 +61,28 @@ function ZaposlednikListPage() {
         </Button>
       </div>
 
+      <div className="mb-4">
+        <input
+          type="search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Pretraži ime, username ili RFID..."
+          className="w-full max-w-sm h-9 px-3 font-mono text-xs bg-input border border-border rounded-sm focus:outline-none focus:border-primary"
+        />
+      </div>
+
       {isLoading ? (
         <div className="space-y-1">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div>
-      ) : (employees?.length ?? 0) === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="border border-dashed border-border text-center py-16">
-          <p className="font-mono text-xs text-muted-foreground uppercase tracking-wider">Nema zaposlenika</p>
-          <Link to="/zaposlenici/novi" className="font-mono text-xs text-primary hover:underline mt-2 inline-block">
-            Dodaj prvog zaposlenika →
-          </Link>
+          <p className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
+            {search ? 'Nema rezultata' : 'Nema zaposlenika'}
+          </p>
+          {!search && (
+            <Link to="/zaposlenici/novi" className="font-mono text-xs text-primary hover:underline mt-2 inline-block">
+              Dodaj prvog zaposlenika →
+            </Link>
+          )}
         </div>
       ) : (
         <div className="border border-border overflow-hidden">
@@ -72,7 +97,7 @@ function ZaposlednikListPage() {
               </tr>
             </thead>
             <tbody>
-              {employees!.map(emp => (
+              {filtered.map(emp => (
                 <tr key={emp.id} className="border-t border-border/40 hover:bg-muted/10 transition-colors">
                   <td className="px-4 py-3 font-medium">{emp.ime_prezime}</td>
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{emp.username}</td>
