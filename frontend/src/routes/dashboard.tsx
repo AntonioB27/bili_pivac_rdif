@@ -60,10 +60,13 @@ function AdminDashboard() {
   const { data: activeSessions, isLoading: loadingActive } = useActiveSessions()
   const clockOut = useClockOutSession()
   const today = new Date()
-  const weekDay = today.getDay() === 0 ? 6 : today.getDay() - 1
-  const weekStart = new Date(today)
-  weekStart.setDate(today.getDate() - weekDay)
-  weekStart.setHours(0, 0, 0, 0)
+  const utcWeekOffset = today.getUTCDay() === 0 ? 6 : today.getUTCDay() - 1
+  const weekStart = new Date(Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate() - utcWeekOffset,
+    0, 0, 0, 0
+  ))
   const { data: alerts, isLoading: loadingAlerts } = useAutoClosedAlerts(weekStart)
   const todayStr = `${toMonthString(today)}-${String(today.getDate()).padStart(2, '0')}`
   const { data: todaySessions } = useSessions(toMonthString(today))
