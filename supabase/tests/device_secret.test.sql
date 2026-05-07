@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(3);
+SELECT plan(4);
 
 INSERT INTO auth.users (id, email, aud, role, encrypted_password,
                         email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
@@ -15,6 +15,16 @@ SELECT is(
   (handle_rfid_scan('CARD-DEV', now(), NULL))->>'status',
   'clock_in',
   'Prazan secret → scan radi bez tajnog ključa'
+);
+
+DELETE FROM work_sessions WHERE employee_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+
+-- Test 4: When secret is explicitly empty string, scan also works without secret
+SET LOCAL app.device_secret = '';
+SELECT is(
+  (handle_rfid_scan('CARD-DEV', now(), NULL))->>'status',
+  'clock_in',
+  'Prazan string secret → scan radi bez tajnog ključa'
 );
 
 DELETE FROM work_sessions WHERE employee_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
