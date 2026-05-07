@@ -52,7 +52,7 @@ function IzvjestajiPage() {
   })) ?? []
 
   const empData = data?.employees.map(e => ({
-    ime: e.ime_prezime.split(' ')[0],
+    ime: e.ime_prezime,
     sati: +(e.total_minutes / 60).toFixed(1),
   })) ?? []
 
@@ -75,18 +75,23 @@ function IzvjestajiPage() {
     setExportingYear(true)
     try {
       const wb = XLSX.utils.book_new()
-      for (const month of [...MONTHS].reverse()) {
-        const [year, m] = month.split('-')
-        const start = `${month}-01`
-        const end = `${month}-${String(new Date(+year, +m, 0).getDate()).padStart(2, '0')}`
-        const { data: sessions, error } = await supabase
-          .from('work_sessions')
-          .select('work_date, clock_in, clock_out, duration_min, employees(ime_prezime)')
-          .gte('work_date', start)
-          .lte('work_date', end)
-          .not('clock_out', 'is', null)
-        if (error) throw error
-        const rows = (sessions ?? []).map((s: any) => ({
+      const results = await Promise.all(
+        [...MONTHS].reverse().map(async (month) => {
+          const [year, m] = month.split('-')
+          const start = `${month}-01`
+          const end = `${month}-${String(new Date(+year, +m, 0).getDate()).padStart(2, '0')}`
+          const { data: sessions, error } = await supabase
+            .from('work_sessions')
+            .select('work_date, clock_in, clock_out, duration_min, employees(ime_prezime)')
+            .gte('work_date', start)
+            .lte('work_date', end)
+            .not('clock_out', 'is', null)
+          if (error) throw error
+          return { month, sessions: sessions ?? [] }
+        })
+      )
+      for (const { month, sessions } of results) {
+        const rows = (sessions as any[]).map(s => ({
           Datum: formatDate(s.work_date),
           Zaposlenik: s.employees?.ime_prezime ?? '',
           Dolazak: formatDateTime(s.clock_in),
@@ -172,7 +177,16 @@ function IzvjestajiPage() {
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={empData} barSize={20}>
                   <CartesianGrid strokeDasharray="2 4" vertical={false} stroke={C.grid} />
-                  <XAxis dataKey="ime" tick={{ fontSize: 10, fill: C.axis, fontFamily: 'IBM Plex Mono' }} axisLine={false} tickLine={false} />
+                  <XAxis
+                    dataKey="ime"
+                    tick={{ fontSize: 9, fill: C.axis, fontFamily: 'IBM Plex Mono' }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval={0}
+                    angle={-20}
+                    textAnchor="end"
+                    height={48}
+                  />
                   <YAxis unit="h" tick={{ fontSize: 10, fill: C.axis, fontFamily: 'IBM Plex Mono' }} axisLine={false} tickLine={false} width={32} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: C.cursor }} />
                   <Bar dataKey="sati" fill={C.bar2} radius={[2, 2, 0, 0]} />
