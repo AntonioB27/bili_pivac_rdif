@@ -64,6 +64,7 @@ function ZaposlednikListPage() {
       <div className="mb-4">
         <input
           type="search"
+          aria-label="Pretraži zaposlenike"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Pretraži ime, username ili RFID..."
@@ -122,12 +123,12 @@ function ZaposlednikListPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0 hover:text-primary rounded-sm">
+                      <Button variant="ghost" size="sm" asChild aria-label={`Uredi zaposlenika ${emp.ime_prezime}`} className="h-7 w-7 p-0 hover:text-primary rounded-sm">
                         <Link to="/zaposlenici/$zaposlenikId" params={{ zaposlenikId: emp.id }}>
                           <Pencil size={13} />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="sm"
+                      <Button variant="ghost" size="sm" aria-label={`Obriši zaposlenika ${emp.ime_prezime}`}
                         className="h-7 w-7 p-0 hover:text-destructive hover:bg-destructive/10 rounded-sm"
                         onClick={() => setDeleteId(emp.id)}>
                         <Trash2 size={13} />
