@@ -8,6 +8,7 @@ import { useCreateSession } from '../../lib/queries/sessions'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { Field } from '../../components/ui/field'
 
 export const Route = createFileRoute('/sesije/nova')({
   beforeLoad: async () => {
@@ -19,17 +20,6 @@ export const Route = createFileRoute('/sesije/nova')({
   component: NovaSesijaPage,
 })
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-baseline gap-2">
-        <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">{label}</label>
-        {hint && <span className="font-mono text-[10px] text-muted-foreground/50">{hint}</span>}
-      </div>
-      {children}
-    </div>
-  )
-}
 
 function NovaSesijaPage() {
   const navigate = useNavigate()
@@ -73,7 +63,7 @@ function NovaSesijaPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Field label="Zaposlenik" hint="*">
+        <Field label="Zaposlenik" hint="*" htmlFor="employee-select">
           <Select value={employeeId} onValueChange={setEmployeeId} required>
             <SelectTrigger className="font-mono bg-input border-border focus:border-primary rounded-sm h-10 text-sm">
               <SelectValue placeholder="Odaberi zaposlenika" />
@@ -86,13 +76,13 @@ function NovaSesijaPage() {
           </Select>
         </Field>
 
-        <Field label="Dolazak" hint="*">
-          <Input type="datetime-local" value={clockIn} onChange={e => setClockIn(e.target.value)} required
+        <Field label="Dolazak" hint="*" htmlFor="clock-in">
+          <Input id="clock-in" type="datetime-local" value={clockIn} onChange={e => setClockIn(e.target.value)} required
             className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10" />
         </Field>
 
-        <Field label="Odlazak" hint="prazno = aktivna sesija">
-          <Input type="datetime-local" value={clockOut} onChange={e => setClockOut(e.target.value)}
+        <Field label="Odlazak" hint="prazno = aktivna sesija" htmlFor="clock-out">
+          <Input id="clock-out" type="datetime-local" value={clockOut} onChange={e => setClockOut(e.target.value)}
             className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10" />
         </Field>
 

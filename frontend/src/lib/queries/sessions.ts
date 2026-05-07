@@ -163,9 +163,12 @@ export function useCreateSession() {
     }: { employee_id: string; clock_in: string; clock_out: string | null }) => {
       const work_date = new Date(clock_in).toLocaleDateString('sv-SE', { timeZone: 'Europe/Zagreb' })
       const duration_min = clock_out
-        ? Math.round(
-            (new Date(clock_out).getTime() - new Date(clock_in).getTime()) / 60_000 / 15
-          ) * 15
+        ? Math.max(
+            Math.round(
+              (new Date(clock_out).getTime() - new Date(clock_in).getTime()) / 60_000 / 15
+            ) * 15,
+            0
+          )
         : null
       const { error } = await supabase
         .from('work_sessions')

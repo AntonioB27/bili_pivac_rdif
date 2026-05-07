@@ -7,6 +7,7 @@ import { useCreateEmployee } from '../../lib/queries/employees'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { Field } from '../../components/ui/field'
 
 export const Route = createFileRoute('/zaposlenici/novi')({
   beforeLoad: async () => {
@@ -18,17 +19,6 @@ export const Route = createFileRoute('/zaposlenici/novi')({
   component: NoviZaposlenikPage,
 })
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-baseline gap-2">
-        <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">{label}</label>
-        {hint && <span className="font-mono text-[10px] text-muted-foreground/50">{hint}</span>}
-      </div>
-      {children}
-    </div>
-  )
-}
 
 function NoviZaposlenikPage() {
   const navigate = useNavigate()
@@ -64,27 +54,27 @@ function NoviZaposlenikPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Field label="Ime i prezime" hint="*">
-          <Input value={form.ime_prezime} onChange={set('ime_prezime')} placeholder="Ivan Horvat" required
+        <Field label="Ime i prezime" hint="*" htmlFor="ime-prezime">
+          <Input id="ime-prezime" value={form.ime_prezime} onChange={set('ime_prezime')} placeholder="Ivan Horvat" required
             className="font-sans bg-input border-border focus-visible:border-primary rounded-sm h-10" />
         </Field>
 
-        <Field label="Korisničko ime" hint="*">
-          <Input value={form.username} onChange={set('username')} placeholder="ihorvat" required
+        <Field label="Korisničko ime" hint="*" htmlFor="username">
+          <Input id="username" value={form.username} onChange={set('username')} placeholder="ihorvat" required
             className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10" />
         </Field>
 
-        <Field label="Lozinka" hint="*">
-          <Input type="password" value={form.password} onChange={set('password')} placeholder="••••••••" required
+        <Field label="Lozinka" hint="*" htmlFor="password">
+          <Input id="password" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" required
             className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10" />
         </Field>
 
-        <Field label="RFID UID" hint="opcionalno">
-          <Input value={form.rfid_uid} onChange={set('rfid_uid')} placeholder="npr. A1B2C3D4"
+        <Field label="RFID UID" hint="opcionalno" htmlFor="rfid-uid">
+          <Input id="rfid-uid" value={form.rfid_uid} onChange={set('rfid_uid')} placeholder="npr. A1B2C3D4"
             className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10 uppercase" />
         </Field>
 
-        <Field label="Uloga" hint="*">
+        <Field label="Uloga" hint="*" htmlFor="role-select">
           <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v as 'admin' | 'employee' }))}>
             <SelectTrigger className="font-mono bg-input border-border focus:border-primary rounded-sm h-10 text-sm">
               <SelectValue />
