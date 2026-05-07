@@ -34,6 +34,7 @@ SELECT throws_ok(
   $$INSERT INTO work_sessions (employee_id, clock_in, work_date)
     VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
             '2026-05-01 09:00:00+00', '2026-05-01')$$,
+  '42501',
   'new row violates row-level security policy for table "work_sessions"',
   'Zaposlenik ne može insertati sesiju'
 );

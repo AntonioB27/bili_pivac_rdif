@@ -1,5 +1,5 @@
 -- Speeds up month-range queries used by useSessions and useMonthlyReport
-CREATE INDEX work_sessions_work_date_idx
+CREATE INDEX IF NOT EXISTS work_sessions_work_date_idx
   ON work_sessions (employee_id, work_date DESC);
 
 -- Allow admins to manually insert sessions.
