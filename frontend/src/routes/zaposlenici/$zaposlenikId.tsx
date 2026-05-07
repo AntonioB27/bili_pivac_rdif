@@ -13,8 +13,8 @@ export const Route = createFileRoute('/zaposlenici/$zaposlenikId')({
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw redirect({ to: '/login' })
-    const { data } = await supabase.from('employees').select('role').eq('id', user.id).single()
-    if (data?.role !== 'admin') throw redirect({ to: '/dashboard' })
+    const { data, error } = await supabase.from('employees').select('role').eq('id', user.id).single()
+    if (error || data?.role !== 'admin') throw redirect({ to: '/dashboard' })
   },
   component: EditZaposlenikPage,
 })
