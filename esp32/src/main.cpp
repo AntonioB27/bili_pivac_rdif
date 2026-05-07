@@ -60,7 +60,8 @@ void loop() {
             Serial.printf("[QUEUE] Replaying UID: %s  Time: %s\n", entry.uid, entry.scanned_at);
             ledSet(255, 255, 255);
             ScanResult result = httpSendScan(gCfg.supabase_url, gCfg.supabase_anon_key,
-                                             entry.uid, entry.scanned_at);
+                                             entry.uid, entry.scanned_at,
+                                             gCfg.device_secret);
             if (result != ScanResult::Error) {
                 Serial.println("[QUEUE] Dequeued");
                 queueDequeue();
@@ -80,7 +81,8 @@ void loop() {
 
         if (wifiConnected()) {
             Serial.println("[HTTP] Sending scan...");
-            ScanResult result = httpSendScan(gCfg.supabase_url, gCfg.supabase_anon_key, uid, ts);
+            ScanResult result = httpSendScan(gCfg.supabase_url, gCfg.supabase_anon_key,
+                                             uid, ts, gCfg.device_secret);
             switch (result) {
                 case ScanResult::ClockIn:  Serial.println("[HTTP] clock_in");  break;
                 case ScanResult::ClockOut: Serial.println("[HTTP] clock_out"); break;

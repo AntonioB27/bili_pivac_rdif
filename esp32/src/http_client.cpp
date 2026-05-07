@@ -5,9 +5,10 @@
 #include <ArduinoJson.h>
 
 ScanResult httpSendScan(const char* supabaseUrl, const char* anonKey,
-                        const char* uid, const char* scannedAt) {
+                        const char* uid, const char* scannedAt,
+                        const char* deviceSecret) {
     WiFiClientSecure client;
-    client.setInsecure();  // skip cert verification — acceptable for internal IoT device
+    client.setInsecure();
     HTTPClient http;
     String url = String(supabaseUrl) + "/rest/v1/rpc/handle_rfid_scan";
     http.begin(client, url);
@@ -19,6 +20,9 @@ ScanResult httpSendScan(const char* supabaseUrl, const char* anonKey,
     JsonDocument body;
     body["p_uid"]        = uid;
     body["p_scanned_at"] = scannedAt;
+    if (deviceSecret && deviceSecret[0] != '\0') {
+        body["p_secret"] = deviceSecret;
+    }
     String bodyStr;
     serializeJson(body, bodyStr);
 
@@ -41,10 +45,14 @@ ScanResult httpSendScan(const char* supabaseUrl, const char* anonKey,
     }
 
     const char* status = resp["status"] | "";
-    if (strcmp(status, "clock_in")  == 0) return ScanResult::ClockIn;
-    if (strcmp(status, "clock_out") == 0) return ScanResult::ClockOut;
-    if (strcmp(status, "too_soon")  == 0) return ScanResult::TooSoon;
-    if (strcmp(status, "not_found") == 0) return ScanResult::NotFound;
+    if (strcmp(status, "clock_in")     == 0) return ScanResult::ClockIn;
+    if (strcmp(status, "clock_out")    == 0) return ScanResult::ClockOut;
+    if (strcmp(status, "too_soon")     == 0) return ScanResult::TooSoon;
+    if (strcmp(status, "not_found")    == 0) return ScanResult::NotFound;
+    if (strcmp(status, "unauthorized") == 0) {
+        Serial.println("[HTTP] Unauthorized — check device_secret in config");
+        return ScanResult::Error;
+    }
     Serial.printf("[HTTP] Unknown status: '%s'\n", status);
     return ScanResult::Error;
 }
