@@ -17,6 +17,7 @@ import { Route as ZaposleniciIndexRouteImport } from './routes/zaposlenici/index
 import { Route as SesijeIndexRouteImport } from './routes/sesije/index'
 import { Route as ZaposleniciNoviRouteImport } from './routes/zaposlenici/novi'
 import { Route as ZaposleniciZaposlenikIdRouteImport } from './routes/zaposlenici/$zaposlenikId'
+import { Route as SesijeNovaRouteImport } from './routes/sesije/nova'
 import { Route as SesijeSessionIdRouteImport } from './routes/sesije/$sessionId'
 
 const LoginRoute = LoginRouteImport.update({
@@ -59,6 +60,11 @@ const ZaposleniciZaposlenikIdRoute = ZaposleniciZaposlenikIdRouteImport.update({
   path: '/zaposlenici/$zaposlenikId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SesijeNovaRoute = SesijeNovaRouteImport.update({
+  id: '/sesije/nova',
+  path: '/sesije/nova',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SesijeSessionIdRoute = SesijeSessionIdRouteImport.update({
   id: '/sesije/$sessionId',
   path: '/sesije/$sessionId',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
   '/sesije/$sessionId': typeof SesijeSessionIdRoute
+  '/sesije/nova': typeof SesijeNovaRoute
   '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
   '/zaposlenici/novi': typeof ZaposleniciNoviRoute
   '/sesije/': typeof SesijeIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
   '/sesije/$sessionId': typeof SesijeSessionIdRoute
+  '/sesije/nova': typeof SesijeNovaRoute
   '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
   '/zaposlenici/novi': typeof ZaposleniciNoviRoute
   '/sesije': typeof SesijeIndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
   '/sesije/$sessionId': typeof SesijeSessionIdRoute
+  '/sesije/nova': typeof SesijeNovaRoute
   '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
   '/zaposlenici/novi': typeof ZaposleniciNoviRoute
   '/sesije/': typeof SesijeIndexRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/izvjestaji'
     | '/login'
     | '/sesije/$sessionId'
+    | '/sesije/nova'
     | '/zaposlenici/$zaposlenikId'
     | '/zaposlenici/novi'
     | '/sesije/'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/izvjestaji'
     | '/login'
     | '/sesije/$sessionId'
+    | '/sesije/nova'
     | '/zaposlenici/$zaposlenikId'
     | '/zaposlenici/novi'
     | '/sesije'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/izvjestaji'
     | '/login'
     | '/sesije/$sessionId'
+    | '/sesije/nova'
     | '/zaposlenici/$zaposlenikId'
     | '/zaposlenici/novi'
     | '/sesije/'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   IzvjestajiRoute: typeof IzvjestajiRoute
   LoginRoute: typeof LoginRoute
   SesijeSessionIdRoute: typeof SesijeSessionIdRoute
+  SesijeNovaRoute: typeof SesijeNovaRoute
   ZaposleniciZaposlenikIdRoute: typeof ZaposleniciZaposlenikIdRoute
   ZaposleniciNoviRoute: typeof ZaposleniciNoviRoute
   SesijeIndexRoute: typeof SesijeIndexRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZaposleniciZaposlenikIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sesije/nova': {
+      id: '/sesije/nova'
+      path: '/sesije/nova'
+      fullPath: '/sesije/nova'
+      preLoaderRoute: typeof SesijeNovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sesije/$sessionId': {
       id: '/sesije/$sessionId'
       path: '/sesije/$sessionId'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   IzvjestajiRoute: IzvjestajiRoute,
   LoginRoute: LoginRoute,
   SesijeSessionIdRoute: SesijeSessionIdRoute,
+  SesijeNovaRoute: SesijeNovaRoute,
   ZaposleniciZaposlenikIdRoute: ZaposleniciZaposlenikIdRoute,
   ZaposleniciNoviRoute: ZaposleniciNoviRoute,
   SesijeIndexRoute: SesijeIndexRoute,

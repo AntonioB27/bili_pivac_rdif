@@ -152,3 +152,26 @@ export function useSessionsRange(from: Date, to: Date, employeeId?: string) {
 
   return { data: combined, isLoading: q1.isLoading || q2.isLoading }
 }
+
+export function useCreateSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      employee_id,
+      clock_in,
+      clock_out,
+    }: { employee_id: string; clock_in: string; clock_out: string | null }) => {
+      const work_date = new Date(clock_in).toLocaleDateString('sv-SE', { timeZone: 'Europe/Zagreb' })
+      const duration_min = clock_out
+        ? Math.round(
+            (new Date(clock_out).getTime() - new Date(clock_in).getTime()) / 60_000 / 15
+          ) * 15
+        : null
+      const { error } = await supabase
+        .from('work_sessions')
+        .insert({ employee_id, clock_in, clock_out, duration_min, work_date })
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
+  })
+}

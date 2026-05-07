@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Pencil } from 'lucide-react'
-import { useEmployees } from '../../lib/queries/employees'
+import { Plus, Pencil } from 'lucide-react'
+import { useCurrentEmployee, useEmployees } from '../../lib/queries/employees'
 import { useSessions } from '../../lib/queries/sessions'
 import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
 import { Skeleton } from '../../components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { getLast12Months, formatMonthLabel, formatDate, formatDateTime, formatMinutes } from '../../lib/utils'
 
@@ -17,104 +15,117 @@ export const Route = createFileRoute('/sesije/')({
 const MONTHS = getLast12Months()
 
 function SesijeListPage() {
+  const { data: me } = useCurrentEmployee()
+  const isAdmin = me?.role === 'admin'
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[0])
   const [employeeFilter, setEmployeeFilter] = useState('all')
   const { data: employees } = useEmployees()
-  const { data: sessions, isLoading } = useSessions(selectedMonth, employeeFilter !== 'all' ? employeeFilter : undefined)
+  const effectiveFilter = isAdmin
+    ? (employeeFilter !== 'all' ? employeeFilter : undefined)
+    : me?.id
+  const { data: sessions, isLoading } = useSessions(selectedMonth, effectiveFilter)
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between flex-wrap gap-4">
+    <>
+      <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
         <div>
-          <h1 className="font-heading font-bold text-3xl text-foreground">Sesije</h1>
-          <p className="text-muted-foreground text-sm mt-1">Pregled i uređivanje evidencije</p>
+          <h1 className="font-heading font-bold text-3xl text-foreground tracking-wide uppercase">Sesije</h1>
+          <p className="font-mono text-xs text-muted-foreground tracking-wider mt-1">
+            {isAdmin ? 'Pregled i uređivanje evidencije' : 'Pregled vaših smjena'}
+          </p>
         </div>
-        <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="Svi zaposlenici" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Svi zaposlenici</SelectItem>
-            {employees?.map(e => <SelectItem key={e.id} value={e.id}>{e.ime_prezime}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
+              <SelectTrigger className="w-48 font-mono text-xs rounded-sm bg-input border-border h-9">
+                <SelectValue placeholder="Svi zaposlenici" />
+              </SelectTrigger>
+              <SelectContent className="font-mono rounded-sm">
+                <SelectItem value="all">Svi zaposlenici</SelectItem>
+                {employees?.map(e => <SelectItem key={e.id} value={e.id}>{e.ime_prezime}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button asChild size="sm" className="gap-1.5 font-mono text-xs rounded-sm">
+              <Link to="/sesije/nova">
+                <Plus size={12} />
+                Nova sesija
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
 
-      <Tabs value={selectedMonth} onValueChange={setSelectedMonth}>
-        <TabsList className="flex flex-wrap h-auto gap-1 justify-start bg-transparent p-0 mb-2">
-          {MONTHS.map(m => (
-            <TabsTrigger
-              key={m}
-              value={m}
-              className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              {formatMonthLabel(m)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
+      <div className="flex flex-wrap gap-1 mb-6">
         {MONTHS.map(m => (
-          <TabsContent key={m} value={m} className="mt-4">
-            {isLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-13 w-full" />)}
-              </div>
-            ) : (sessions?.length ?? 0) === 0 ? (
-              <div className="text-center py-16 rounded-lg border border-dashed border-border">
-                <p className="text-muted-foreground text-sm">Nema sesija za ovaj period.</p>
-              </div>
-            ) : (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/30">
-                    <tr>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Datum</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Zaposlenik</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Dolazak</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Odlazak</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Trajanje</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sessions!.map(s => (
-                      <tr key={s.id} className="border-t border-border/50 hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{formatDate(s.work_date)}</td>
-                        <td className="px-4 py-3 font-medium">{s.employees?.ime_prezime}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatDateTime(s.clock_in)}</td>
-                        <td className="px-4 py-3 font-mono text-xs">
-                          {s.clock_out
-                            ? <span className="text-muted-foreground">{formatDateTime(s.clock_out)}</span>
-                            : <span className="text-amber-400">još aktivan</span>
-                          }
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                          {s.duration_min != null ? formatMinutes(s.duration_min) : '—'}
-                        </td>
-                        <td className="px-4 py-3">
-                          {s.is_auto_closed && (
-                            <Badge variant="outline" className="text-amber-400 border-amber-400/30 bg-amber-400/5 text-xs">
-                              auto
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 hover:text-primary">
-                            <Link to="/sesije/$sessionId" params={{ sessionId: s.id }}>
-                              <Pencil size={14} />
-                            </Link>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </TabsContent>
+          <button key={m} onClick={() => setSelectedMonth(m)}
+            className={`font-mono text-[10px] px-3 py-1.5 uppercase tracking-wider transition-colors ${
+              selectedMonth === m
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground border border-border'
+            }`}>
+            {formatMonthLabel(m)}
+          </button>
         ))}
-      </Tabs>
-    </div>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-1">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div>
+      ) : (sessions?.length ?? 0) === 0 ? (
+        <div className="border border-dashed border-border text-center py-16">
+          <p className="font-mono text-xs text-muted-foreground uppercase tracking-wider">Nema sesija za ovaj period</p>
+        </div>
+      ) : (
+        <div className="border border-border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/20">
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Datum</th>
+                {isAdmin && <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Zaposlenik</th>}
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Dolazak</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Odlazak</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Trajanje</th>
+                {isAdmin && <th className="w-10" />}
+              </tr>
+            </thead>
+            <tbody>
+              {sessions!.map(s => (
+                <tr key={s.id} className="border-t border-border/40 hover:bg-muted/10 transition-colors">
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatDate(s.work_date)}</td>
+                  {isAdmin && (
+                    <td className="px-4 py-3 font-medium text-sm">
+                      <span>{s.employees?.ime_prezime}</span>
+                      {s.is_auto_closed && (
+                        <span className="ml-2 font-mono text-[9px] px-1.5 py-0.5 border border-amber-500/30 text-amber-400 bg-amber-500/5 uppercase tracking-wider">
+                          auto
+                        </span>
+                      )}
+                    </td>
+                  )}
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatDateTime(s.clock_in)}</td>
+                  <td className="px-4 py-3 font-mono text-xs">
+                    {s.clock_out
+                      ? <span className="text-muted-foreground">{formatDateTime(s.clock_out)}</span>
+                      : <span className="text-primary animate-pulse">● aktivan</span>
+                    }
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-primary">
+                    {s.duration_min != null ? formatMinutes(s.duration_min) : '—'}
+                  </td>
+                  {isAdmin && (
+                    <td className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0 hover:text-primary rounded-sm">
+                        <Link to="/sesije/$sessionId" params={{ sessionId: s.id }}>
+                          <Pencil size={13} />
+                        </Link>
+                      </Button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
   )
 }
