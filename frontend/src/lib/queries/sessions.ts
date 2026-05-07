@@ -1,6 +1,7 @@
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../supabase'
+import { toMonthString } from '../utils'
 
 export type WorkSession = {
   id: string
@@ -125,13 +126,9 @@ export function useUpdateSession() {
   })
 }
 
-function monthStr(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
 export function useSessionsRange(from: Date, to: Date, employeeId?: string) {
-  const fromMonth = monthStr(from)
-  const toMonth   = monthStr(to)
+  const fromMonth = toMonthString(from)
+  const toMonth   = toMonthString(to)
   const q1 = useSessions(fromMonth, employeeId)
   const q2 = useSessions(toMonth,   employeeId)
 
