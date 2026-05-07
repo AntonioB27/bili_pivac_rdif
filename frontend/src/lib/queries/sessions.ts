@@ -25,24 +25,26 @@ export function useActiveSessions() {
       if (error) throw error
       return data as WorkSession[]
     },
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   })
 }
 
-export function useAutoClosedAlerts() {
+export function useAutoClosedAlerts(since?: Date) {
   return useQuery({
-    queryKey: ['sessions', 'auto-closed'],
+    queryKey: ['sessions', 'auto-closed', since?.toISOString() ?? 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('work_sessions')
         .select('*, employees(ime_prezime, username)')
         .eq('is_auto_closed', true)
         .order('clock_out', { ascending: false })
         .limit(20)
+      if (since) q = q.gte('clock_out', since.toISOString())
+      const { data, error } = await q
       if (error) throw error
       return data as WorkSession[]
     },
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   })
 }
 
@@ -81,6 +83,27 @@ export function useSession(id: string) {
       if (error) throw error
       return data as WorkSession
     },
+  })
+}
+
+export function useClockOutSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, clock_in }: { id: string; clock_in: string }) => {
+      const clock_out = new Date().toISOString()
+      const duration_min = Math.max(
+        Math.round((new Date(clock_out).getTime() - new Date(clock_in).getTime()) / 60_000 / 15) * 15,
+        0
+      )
+      const { data, error } = await supabase
+        .from('work_sessions')
+        .update({ clock_out, duration_min })
+        .eq('id', id)
+        .select()
+      if (error) throw error
+      if (!data || data.length === 0) throw new Error('Nema dozvole za ažuriranje sesije (RLS)')
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
   })
 }
 
