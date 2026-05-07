@@ -1,16 +1,34 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import { supabase } from '../../lib/supabase'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { ChevronLeft } from 'lucide-react'
 import { useCreateEmployee } from '../../lib/queries/employees'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 
 export const Route = createFileRoute('/zaposlenici/novi')({
+  beforeLoad: async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw redirect({ to: '/login' })
+    const { data } = await supabase.from('employees').select('role').eq('id', user.id).single()
+    if (data?.role !== 'admin') throw redirect({ to: '/dashboard' })
+  },
   component: NoviZaposlenikPage,
 })
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline gap-2">
+        <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">{label}</label>
+        {hint && <span className="font-mono text-[10px] text-muted-foreground/50">{hint}</span>}
+      </div>
+      {children}
+    </div>
+  )
+}
 
 function NoviZaposlenikPage() {
   const navigate = useNavigate()
@@ -34,65 +52,63 @@ function NoviZaposlenikPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-lg">
-      <div>
-        <button
-          onClick={() => navigate({ to: '/zaposlenici' })}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-        >
-          <ChevronLeft size={15} />
-          Zaposlenici
-        </button>
-        <h1 className="font-heading font-bold text-3xl text-foreground">Dodaj zaposlenika</h1>
-        <p className="text-muted-foreground text-sm mt-1">Novi korisnički račun i pristupna kartica</p>
+    <div className="max-w-lg">
+      <button onClick={() => navigate({ to: '/zaposlenici' })}
+        className="flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-foreground transition-colors mb-6 uppercase tracking-wider">
+        <ChevronLeft size={13} /> Zaposlenici
+      </button>
+
+      <div className="mb-8">
+        <h1 className="font-heading font-bold text-3xl text-foreground tracking-wide uppercase">Dodaj zaposlenika</h1>
+        <p className="font-mono text-xs text-muted-foreground tracking-wider mt-1">Novi korisnički račun i pristupna kartica</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="space-y-1.5">
-          <Label htmlFor="ime">Ime i prezime <span className="text-primary">*</span></Label>
-          <Input id="ime" value={form.ime_prezime} onChange={set('ime_prezime')} placeholder="Ivan Horvat" required />
-        </div>
+        <Field label="Ime i prezime" hint="*">
+          <Input value={form.ime_prezime} onChange={set('ime_prezime')} placeholder="Ivan Horvat" required
+            className="font-sans bg-input border-border focus-visible:border-primary rounded-sm h-10" />
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="uname">Korisničko ime <span className="text-primary">*</span></Label>
-          <Input id="uname" value={form.username} onChange={set('username')} placeholder="ihorvat" required />
-        </div>
+        <Field label="Korisničko ime" hint="*">
+          <Input value={form.username} onChange={set('username')} placeholder="ihorvat" required
+            className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10" />
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="pw">Lozinka <span className="text-primary">*</span></Label>
-          <Input id="pw" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" required />
-        </div>
+        <Field label="Lozinka" hint="*">
+          <Input type="password" value={form.password} onChange={set('password')} placeholder="••••••••" required
+            className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10" />
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="rfid">
-            RFID UID
-            <span className="text-muted-foreground font-normal ml-1.5 text-xs">(opcionalno za admin)</span>
-          </Label>
-          <Input id="rfid" value={form.rfid_uid} onChange={set('rfid_uid')} placeholder="npr. A1B2C3D4" className="font-mono" />
-        </div>
+        <Field label="RFID UID" hint="opcionalno">
+          <Input value={form.rfid_uid} onChange={set('rfid_uid')} placeholder="npr. A1B2C3D4"
+            className="font-mono bg-input border-border focus-visible:border-primary rounded-sm h-10 uppercase" />
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label>Uloga <span className="text-primary">*</span></Label>
+        <Field label="Uloga" hint="*">
           <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v as 'admin' | 'employee' }))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectTrigger className="font-mono bg-input border-border focus:border-primary rounded-sm h-10 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="font-mono rounded-sm">
               <SelectItem value="employee">Zaposlenik</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="admin">Administrator</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
-            {error}
-          </p>
+          <div className="border border-destructive/40 bg-destructive/10 px-3 py-2.5">
+            <p className="font-mono text-xs text-destructive">{error}</p>
+          </div>
         )}
 
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" disabled={createEmployee.isPending}>
+        <div className="flex gap-2 pt-2">
+          <Button type="submit" disabled={createEmployee.isPending}
+            className="font-heading tracking-wide uppercase text-xs rounded-sm">
             {createEmployee.isPending ? 'Dodavanje...' : 'Dodaj zaposlenika'}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate({ to: '/zaposlenici' })}>
+          <Button type="button" variant="outline" onClick={() => navigate({ to: '/zaposlenici' })}
+            className="font-mono text-xs rounded-sm">
             Odustani
           </Button>
         </div>

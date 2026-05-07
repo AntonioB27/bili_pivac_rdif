@@ -1,14 +1,20 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { supabase } from '../../lib/supabase'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { UserPlus, Pencil, Trash2 } from 'lucide-react'
+import { UserPlus, Pencil, Trash2, CreditCard } from 'lucide-react'
 import { useEmployees, useDeleteEmployee } from '../../lib/queries/employees'
 import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
 import { Skeleton } from '../../components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog'
 
 export const Route = createFileRoute('/zaposlenici/')({
+  beforeLoad: async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw redirect({ to: '/login' })
+    const { data } = await supabase.from('employees').select('role').eq('id', user.id).single()
+    if (data?.role !== 'admin') throw redirect({ to: '/dashboard' })
+  },
   component: ZaposlednikListPage,
 })
 
@@ -30,76 +36,76 @@ function ZaposlednikListPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between">
+    <>
+      <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="font-heading font-bold text-3xl text-foreground">Zaposlenici</h1>
-          <p className="text-muted-foreground text-sm mt-1">Upravljanje zaposlenicima i RFID karticama</p>
+          <h1 className="font-heading font-bold text-3xl text-foreground tracking-wide uppercase">Zaposlenici</h1>
+          <p className="font-mono text-xs text-muted-foreground tracking-wider mt-1">Upravljanje zaposlenicima i RFID karticama</p>
         </div>
-        <Button asChild size="sm" className="gap-2">
+        <Button asChild size="sm" className="gap-2 font-heading tracking-wide uppercase text-xs rounded-sm">
           <Link to="/zaposlenici/novi">
-            <UserPlus size={15} strokeWidth={2} />
-            Dodaj zaposlenika
+            <UserPlus size={13} strokeWidth={2} />
+            Dodaj
           </Link>
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 w-full" />)}
-        </div>
+        <div className="space-y-1">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : (employees?.length ?? 0) === 0 ? (
-        <div className="text-center py-16 rounded-lg border border-dashed border-border">
-          <p className="text-muted-foreground text-sm">Nema zaposlenika.</p>
-          <Link to="/zaposlenici/novi" className="text-sm text-primary hover:underline mt-1 inline-block">
-            Dodaj prvog zaposlenika
+        <div className="border border-dashed border-border text-center py-16">
+          <p className="font-mono text-xs text-muted-foreground uppercase tracking-wider">Nema zaposlenika</p>
+          <Link to="/zaposlenici/novi" className="font-mono text-xs text-primary hover:underline mt-2 inline-block">
+            Dodaj prvog zaposlenika →
           </Link>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
+        <div className="border border-border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-muted/30">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Ime i prezime</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Username</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">RFID UID</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Uloga</th>
-                <th />
+            <thead>
+              <tr className="border-b border-border bg-muted/20">
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Ime i prezime</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Username</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">RFID UID</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Uloga</th>
+                <th className="w-20" />
               </tr>
             </thead>
             <tbody>
-              {employees!.map((emp, i) => (
-                <tr key={emp.id} className={`border-t border-border/50 hover:bg-muted/20 transition-colors ${i === 0 ? 'border-t border-border' : ''}`}>
+              {employees!.map(emp => (
+                <tr key={emp.id} className="border-t border-border/40 hover:bg-muted/10 transition-colors">
                   <td className="px-4 py-3 font-medium">{emp.ime_prezime}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{emp.username}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{emp.username}</td>
                   <td className="px-4 py-3">
-                    {emp.rfid_uid
-                      ? <span className="font-mono text-xs text-foreground/80 bg-muted/50 px-2 py-0.5 rounded">{emp.rfid_uid}</span>
-                      : <span className="text-muted-foreground text-xs">—</span>
-                    }
+                    {emp.rfid_uid ? (
+                      <span className="inline-flex items-center gap-1.5 font-mono text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5">
+                        <CreditCard size={10} />
+                        {emp.rfid_uid}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground/40">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge
-                      variant={emp.role === 'admin' ? 'default' : 'secondary'}
-                      className={emp.role === 'admin' ? 'bg-primary/15 text-primary border-primary/20 text-xs' : 'text-xs'}
-                    >
+                    <span className={`font-mono text-[10px] px-2 py-0.5 uppercase tracking-wider border ${
+                      emp.role === 'admin'
+                        ? 'text-primary border-primary/30 bg-primary/10'
+                        : 'text-muted-foreground border-border bg-muted/20'
+                    }`}>
                       {emp.role === 'admin' ? 'Admin' : 'Zaposlenik'}
-                    </Badge>
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 hover:text-primary">
+                      <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0 hover:text-primary rounded-sm">
                         <Link to="/zaposlenici/$zaposlenikId" params={{ zaposlenikId: emp.id }}>
-                          <Pencil size={14} />
+                          <Pencil size={13} />
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => setDeleteId(emp.id)}
-                      >
-                        <Trash2 size={14} />
+                      <Button variant="ghost" size="sm"
+                        className="h-7 w-7 p-0 hover:text-destructive hover:bg-destructive/10 rounded-sm"
+                        onClick={() => setDeleteId(emp.id)}>
+                        <Trash2 size={13} />
                       </Button>
                     </div>
                   </td>
@@ -111,21 +117,22 @@ function ZaposlednikListPage() {
       )}
 
       <Dialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
-        <DialogContent>
+        <DialogContent className="rounded-sm">
           <DialogHeader>
-            <DialogTitle>Brisanje zaposlenika</DialogTitle>
-            <DialogDescription>
-              Sigurno želiš obrisati <strong>{toDelete?.ime_prezime}</strong>? Briše se i sva evidencija radnog vremena. Ako zaposlenik ima otvorenu sesiju, bit će automatski zatvorena.
+            <DialogTitle className="font-heading tracking-wide uppercase">Brisanje zaposlenika</DialogTitle>
+            <DialogDescription className="font-mono text-xs leading-relaxed">
+              Sigurno želiš obrisati <strong className="text-foreground">{toDelete?.ime_prezime}</strong>?
+              Briše se i sva evidencija radnog vremena.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteId(null)}>Odustani</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteEmployee.isPending}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteId(null)} className="rounded-sm font-mono text-xs">Odustani</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteEmployee.isPending} className="rounded-sm font-mono text-xs">
               {deleteEmployee.isPending ? 'Brisanje...' : 'Obriši'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
