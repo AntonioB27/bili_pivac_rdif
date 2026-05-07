@@ -126,6 +126,17 @@ export function useUpdateSession() {
   })
 }
 
+export function useDeleteSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('work_sessions').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
+  })
+}
+
 export function useSessionsRange(from: Date, to: Date, employeeId?: string) {
   const fromMonth = toMonthString(from)
   const toMonth   = toMonthString(to)
