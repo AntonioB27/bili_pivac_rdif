@@ -131,7 +131,7 @@ function EditSesijaPage() {
             className="font-mono text-xs rounded-sm">
             Odustani
           </Button>
-          <Button type="button" variant="ghost" size="sm"
+          <Button type="button" variant="ghost" size="sm" aria-label="Obriši sesiju"
             className="ml-auto h-9 w-9 p-0 text-muted-foreground/40 hover:text-destructive hover:bg-red-50 rounded-sm"
             onClick={() => setConfirmDelete(true)}>
             <Trash2 size={14} />
