@@ -8,7 +8,11 @@
 #include "http_client.h"
 #include "queue.h"
 
-static Config gCfg;
+static Config   gCfg;
+static uint32_t lastNtpSync = 0;
+
+// 24-hour interval; unsigned subtraction handles millis() overflow at ~49 days
+static const uint32_t NTP_RESYNC_MS = 24UL * 60UL * 60UL * 1000UL;
 
 static void ntpSync() {
     configTime(0, 0, NTP_SERVER);
@@ -38,22 +42,28 @@ static void applyLedFeedback(ScanResult result) {
 void setup() {
     Serial.begin(115200);
     ledInit();
-    ledSet(255, 255, 255);  // white = booting
+    ledSet(255, 255, 255);
 
     if (!storageInit()) {
         while (true) { ledBlink(255, 0, 0, 1, 300, 700); }
     }
 
     queueInit();
-    configLoad(gCfg);  // empty on first boot — portal will populate it
-    wifiInit(gCfg);    // blocks until connected; purple pulse if portal opens
+    configLoad(gCfg);
+    wifiInit(gCfg);
     ntpSync();
+    lastNtpSync = millis();
     rfidInit();
-    ledOff();          // ready
+    ledOff();
 }
 
 void loop() {
-    // Sync one queued scan per iteration when online
+    if ((uint32_t)(millis() - lastNtpSync) >= NTP_RESYNC_MS) {
+        Serial.println("[NTP] Daily re-sync");
+        ntpSync();
+        lastNtpSync = millis();
+    }
+
     if (wifiConnected() && !queueIsEmpty()) {
         QueueEntry entry;
         if (queuePeek(entry)) {
@@ -72,7 +82,6 @@ void loop() {
         }
     }
 
-    // Read RFID
     char uid[32];
     if (rfidRead(uid, sizeof(uid))) {
         char ts[32];
