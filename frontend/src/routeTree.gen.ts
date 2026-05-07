@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IzvjestajiRouteImport } from './routes/izvjestaji'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -20,6 +21,11 @@ import { Route as ZaposleniciZaposlenikIdRouteImport } from './routes/zaposlenic
 import { Route as SesijeNovaRouteImport } from './routes/sesije/nova'
 import { Route as SesijeSessionIdRouteImport } from './routes/sesije/$sessionId'
 
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
+  '/profil': typeof ProfilRoute
   '/sesije/$sessionId': typeof SesijeSessionIdRoute
   '/sesije/nova': typeof SesijeNovaRoute
   '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
+  '/profil': typeof ProfilRoute
   '/sesije/$sessionId': typeof SesijeSessionIdRoute
   '/sesije/nova': typeof SesijeNovaRoute
   '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/izvjestaji': typeof IzvjestajiRoute
   '/login': typeof LoginRoute
+  '/profil': typeof ProfilRoute
   '/sesije/$sessionId': typeof SesijeSessionIdRoute
   '/sesije/nova': typeof SesijeNovaRoute
   '/zaposlenici/$zaposlenikId': typeof ZaposleniciZaposlenikIdRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/izvjestaji'
     | '/login'
+    | '/profil'
     | '/sesije/$sessionId'
     | '/sesije/nova'
     | '/zaposlenici/$zaposlenikId'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/izvjestaji'
     | '/login'
+    | '/profil'
     | '/sesije/$sessionId'
     | '/sesije/nova'
     | '/zaposlenici/$zaposlenikId'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/izvjestaji'
     | '/login'
+    | '/profil'
     | '/sesije/$sessionId'
     | '/sesije/nova'
     | '/zaposlenici/$zaposlenikId'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   IzvjestajiRoute: typeof IzvjestajiRoute
   LoginRoute: typeof LoginRoute
+  ProfilRoute: typeof ProfilRoute
   SesijeSessionIdRoute: typeof SesijeSessionIdRoute
   SesijeNovaRoute: typeof SesijeNovaRoute
   ZaposleniciZaposlenikIdRoute: typeof ZaposleniciZaposlenikIdRoute
@@ -162,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   IzvjestajiRoute: IzvjestajiRoute,
   LoginRoute: LoginRoute,
+  ProfilRoute: ProfilRoute,
   SesijeSessionIdRoute: SesijeSessionIdRoute,
   SesijeNovaRoute: SesijeNovaRoute,
   ZaposleniciZaposlenikIdRoute: ZaposleniciZaposlenikIdRoute,

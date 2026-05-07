@@ -29,7 +29,7 @@ const ADMIN_NAV = [
 const EMPLOYEE_NAV = [
   { to: '/dashboard' as const, label: 'Dashboard',   icon: LayoutDashboard },
   { to: '/sesije'    as const, label: 'Moje smjene', icon: Clock           },
-  { to: '/profil',             label: 'Profil',      icon: UserCircle      },
+  { to: '/profil'   as const, label: 'Profil',      icon: UserCircle      },
 ]
 
 function RootLayout() {
@@ -77,7 +77,7 @@ function RootLayout() {
             const isActive = pathname === to ||
               (to !== '/dashboard' && to !== '/profil' && pathname.startsWith(to))
             return (
-              <Link key={to} to={to as any}
+              <Link key={to} to={to}
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-all rounded-xl mb-0.5 ${
                   isActive
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground'
