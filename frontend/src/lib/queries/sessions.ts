@@ -1,3 +1,4 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../supabase'
 
@@ -122,4 +123,24 @@ export function useUpdateSession() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
   })
+}
+
+function monthStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function useSessionsRange(from: Date, to: Date, employeeId?: string) {
+  const fromMonth = monthStr(from)
+  const toMonth   = monthStr(to)
+  const q1 = useSessions(fromMonth, employeeId)
+  const q2 = useSessions(toMonth,   employeeId)
+
+  const combined = React.useMemo(() => {
+    if (fromMonth === toMonth) return q1.data
+    const merged = [...(q1.data ?? []), ...(q2.data ?? [])]
+    const seen = new Set<string>()
+    return merged.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true })
+  }, [q1.data, q2.data, fromMonth, toMonth])
+
+  return { data: combined, isLoading: q1.isLoading || q2.isLoading }
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { AlertTriangle, UserCheck, LogOut, TrendingUp } from 'lucide-react'
-import { useActiveSessions, useAutoClosedAlerts, useSessions, useClockOutSession } from '../lib/queries/sessions'
+import { useActiveSessions, useAutoClosedAlerts, useSessions, useClockOutSession, useSessionsRange } from '../lib/queries/sessions'
 import { useCurrentEmployee } from '../lib/queries/employees'
 import { Skeleton } from '../components/ui/skeleton'
 import { Button } from '../components/ui/button'
@@ -174,19 +174,30 @@ function AdminDashboard() {
 function EmployeeDashboard({ employeeId }: { employeeId: string }) {
   const { data: me } = useCurrentEmployee()
   const today = new Date()
-  const todayStr = `${toMonthString(today)}-${String(today.getDate()).padStart(2, '0')}`
-  const { data: sessions, isLoading } = useSessions(toMonthString(today), employeeId)
-  const activeSession = sessions?.find(s => s.clock_out === null)
+  const todayStr = today.toLocaleDateString('sv-SE') // YYYY-MM-DD in local time
 
-  const todayMins = sessions?.filter(s => s.work_date === todayStr).reduce((a, s) => a + (s.duration_min ?? 0), 0) ?? 0
-  const monthMins = sessions?.reduce((a, s) => a + (s.duration_min ?? 0), 0) ?? 0
+  // Week bounds (ISO week: Monday = day 0)
   const weekDay = today.getDay() === 0 ? 6 : today.getDay() - 1
-  const weekStartDate = new Date(today)
-  weekStartDate.setDate(today.getDate() - weekDay)
-  const weekStartStr = `${toMonthString(weekStartDate)}-${String(weekStartDate.getDate()).padStart(2, '0')}`
-  const weekMins = sessions?.filter(s => s.work_date >= weekStartStr).reduce((a, s) => a + (s.duration_min ?? 0), 0) ?? 0
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - weekDay)
+  weekStart.setHours(0, 0, 0, 0)
+  const weekStartStr = weekStart.toLocaleDateString('sv-SE') // YYYY-MM-DD
 
-  const recentSessions = sessions?.filter(s => s.clock_out !== null).slice(-5).reverse() ?? []
+  // Fetch back to the start of the month that contains Monday,
+  // so week hours are correct even when the week spans two months.
+  const rangeFrom = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1)
+  const { data: sessions, isLoading } = useSessionsRange(rangeFrom, today, employeeId)
+
+  const currentMonthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+  const activeSession = sessions?.find(s => s.clock_out === null)
+  const todayMins  = sessions?.filter(s => s.work_date === todayStr).reduce((a, s) => a + (s.duration_min ?? 0), 0) ?? 0
+  const weekMins   = sessions?.filter(s => s.work_date >= weekStartStr).reduce((a, s) => a + (s.duration_min ?? 0), 0) ?? 0
+  const monthMins  = sessions?.filter(s => s.work_date.startsWith(currentMonthPrefix)).reduce((a, s) => a + (s.duration_min ?? 0), 0) ?? 0
+
+  const recentSessions = sessions
+    ?.filter(s => s.clock_out !== null)
+    .sort((a, b) => b.work_date.localeCompare(a.work_date))
+    .slice(0, 5) ?? []
 
   return (
     <>
