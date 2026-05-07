@@ -19,7 +19,7 @@ SELECT is(
 
 DELETE FROM work_sessions WHERE employee_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 
--- Test 4: When secret is explicitly empty string, scan also works without secret
+-- Test 2: When secret is explicitly empty string, scan also works without secret
 SET LOCAL app.device_secret = '';
 SELECT is(
   (handle_rfid_scan('CARD-DEV', now(), NULL))->>'status',
@@ -29,7 +29,7 @@ SELECT is(
 
 DELETE FROM work_sessions WHERE employee_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 
--- Test 2: When secret is set, wrong secret → unauthorized
+-- Test 3: When secret is set, wrong secret → unauthorized
 SET LOCAL app.device_secret = 'correct-secret';
 SELECT is(
   (handle_rfid_scan('CARD-DEV', now(), 'wrong-secret'))->>'status',
@@ -37,7 +37,7 @@ SELECT is(
   'Krivi tajni ključ → unauthorized'
 );
 
--- Test 3: Correct secret works
+-- Test 4: Correct secret works
 SELECT is(
   (handle_rfid_scan('CARD-DEV', now(), 'correct-secret'))->>'status',
   'clock_in',
