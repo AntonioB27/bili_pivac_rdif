@@ -10,6 +10,19 @@ export type Employee = {
   created_at: string
 }
 
+export function useCurrentEmployee() {
+  return useQuery({
+    queryKey: ['employees', 'me'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { data, error } = await supabase.from('employees').select('*').eq('id', user.id).single()
+      if (error) throw error
+      return data as Employee
+    },
+  })
+}
+
 export function useEmployees() {
   return useQuery({
     queryKey: ['employees'],

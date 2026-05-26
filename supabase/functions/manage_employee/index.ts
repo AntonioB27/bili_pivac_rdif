@@ -4,36 +4,43 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, content-type',
+}
+
 interface CreatePayload { action: 'create'; ime_prezime: string; username: string; password: string; rfid_uid?: string; role: 'admin' | 'employee' }
 interface UpdatePayload { action: 'update'; id: string; ime_prezime?: string; rfid_uid?: string; role?: 'admin' | 'employee'; password?: string }
 interface DeletePayload { action: 'delete'; id: string }
 type Payload = CreatePayload | UpdatePayload | DeletePayload
 
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 })
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
+  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: CORS })
 
   const authHeader = req.headers.get('Authorization')
-  if (!authHeader) return new Response('Unauthorized', { status: 401 })
+  if (!authHeader) return new Response('Unauthorized', { status: 401, headers: CORS })
 
   // Verify caller is authenticated admin
   const callerClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   })
   const { data: { user }, error: authError } = await callerClient.auth.getUser()
-  if (authError || !user) return new Response('Unauthorized', { status: 401 })
+  if (authError || !user) return new Response('Unauthorized', { status: 401, headers: CORS })
 
   const { data: emp } = await callerClient.from('employees').select('role').eq('id', user.id).single()
-  if (!emp || emp.role !== 'admin') return new Response('Forbidden', { status: 403 })
+  if (!emp || emp.role !== 'admin') return new Response('Forbidden', { status: 403, headers: CORS })
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
   let payload: Payload
-  try { payload = await req.json() } catch { return new Response('Invalid JSON', { status: 400 }) }
+  try { payload = await req.json() } catch { return new Response('Invalid JSON', { status: 400, headers: CORS }) }
 
   const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+    new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
   if (payload.action === 'create') {
     const { data, error } = await adminClient.auth.admin.createUser({
@@ -71,7 +78,7 @@ Deno.serve(async (req) => {
       const { error } = await adminClient.auth.admin.updateUserById(payload.id, { password: payload.password })
       if (error) return json({ error: error.message }, 400)
     }
-    return new Response('OK', { status: 200 })
+    return new Response('OK', { status: 200, headers: CORS })
   }
 
   if (payload.action === 'delete') {
@@ -84,8 +91,8 @@ Deno.serve(async (req) => {
 
     const { error } = await adminClient.auth.admin.deleteUser(payload.id)
     if (error) return json({ error: error.message }, 400)
-    return new Response('OK', { status: 200 })
+    return new Response('OK', { status: 200, headers: CORS })
   }
 
-  return new Response('Unknown action', { status: 400 })
+  return new Response('Unknown action', { status: 400, headers: CORS })
 })
